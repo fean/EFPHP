@@ -4,10 +4,25 @@
     *@author Leonard Breitkopf
     */
     class User {
+        /**
+        *@var int
+        */
         public $id;
+        /**
+        *@var string
+        */
         public $Username;
+        /**
+        *@var string
+        */
         public $Mail;
+        /**
+        *@var string
+        */
         public $Password;
+        /**
+        *@var bool
+        */
         public $Verified;
         
         /**
@@ -35,10 +50,25 @@
     *@author Leonard Breitkopf
     */
     class Product {
+        /**
+        *@var int
+        */
         public $id;
+        /**
+        *@var string
+        */
         public $Name;
+        /**
+        *@var string
+        */
         public $Description;
+        /**
+        *@var float
+        */
         public $Price;
+        /**
+        *@var bool
+        */
         public $Available;
 
         /**
@@ -47,7 +77,7 @@
         *@param int $id The user's id.
         *@param string $Name The products's username.
         *@param string $Description A product's description.
-        *@param double|float $Price The product's price.
+        *@param float $Price The product's price.
         *@param bool $Available This is a value representing an object's stock availability.
         *
         *@access public
