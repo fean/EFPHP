@@ -133,8 +133,6 @@
             if ($this->connected) {
                 try {
                     $statement = $this->PDO->prepare(self::QRY_REGISTER);
-                    echo $username .' + ' . $password . ' + ' . $email . '<br />';
-                    echo (self::sanitizeString($username) .' + ' . self::hashPassword($password) . ' + ' . self::sanitizeString($email) . '<br />');
                     if($statement->execute(array(
                                     ':username' => self::sanitizeString($username), 
                                     ':password' => self::hashPassword($password), 
