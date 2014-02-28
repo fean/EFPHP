@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<entities>
+    <entity>
+        <set>
+            <naming>pluralize</naming>
+            <name>User</name>
+        </set>
+
+        <identity>
+            <name>ID</name>
+            <type>int</type>
+        </identity>
+        <property>
+            <name>Username</name>
+            <type>string</type>
+        </property>
+        <property>
+            <name>Password</name>
+            <type>string</type>
+            <security>
+                <hash>sha256</hash>
+            </security>
+        </property>
+        <property>
+            <name>Mail</name>
+            <type>string</type>
+        </property>
+        <property>
+            <name>Verified</name>
+            <type>boolean</type>
+        </property>
+    </entity>
+
+    <entity>
+        <set>
+            <naming>pluralize</naming>
+            <name>Profile</name>
+        </set>
+
+        <identity>
+            <name>ID</name>
+            <type>int</type>
+        </identity>
+        <property>
+            <name>Firstname</name>
+            <type>string</type>
+        </property>
+        <property>
+            <name>Lastname</name>
+            <type>string</type>
+        </property>
+        <property>
+            <name>Birthdate</name>
+            <type>date</type>
+        </property>
+        <property>
+            <name>Phone</name>
+            <type>string</type>
+            <length>10</length>
+        </property>
+        <property>
+            <name>Address</name>
+            <type>string</type>
+        </property>
+        <property>
+            <name>ZipCode</name>
+            <type>string</type>
+            <length>6</length>
+        </property>
+        <property>
+            <name>City</name>
+            <type>string</type>
+        </property>
+    </entity>
+
+    <entity>
+        <set>
+            <naming>pluralize</naming>
+            <name>Verifier</name>
+        </set>
+
+        <identity>
+            <name>ID</name>
+            <type>int</type>
+        </identity>
+        <property>
+            <name>Code</name>
+            <type>string</type>
+        </property>
+    </entity>
+
+    <reference>
+        <from>
+            <entity>Profile</entity>
+            <property>ID</property>
+        </from>
+        <to>
+            <entity>User</entity>
+            <property>ID</property>
+        </to>
+    </reference>
+
+    <reference>
+        <from>
+            <entity>Verifier</entity>
+            <property>ID</property>
+        </from>
+        <to>
+            <entity>User</entity>
+            <property>ID</property>
+        </to>
+    </reference>
+</entities>
