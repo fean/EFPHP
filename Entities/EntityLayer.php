@@ -18,7 +18,7 @@
                 if(!$lazy)
                     $this->PDO = new PDO(sprintf(self::DSN, $server, $database), $user, $password);
             } catch (Exception $e) {
-                if ($structural) { 
+                if ($structural) {
                     trigger_error($e->message, E_USER_ERROR);
                 } else {
                     throw $e;
@@ -39,7 +39,7 @@
         public function getEntity($entity, $properties) {
             $t_entity;
             foreach ($this->entities as $_entity) {
-                if ($_entity->name == $entity || $_entity-> . (strtolower($_entity->naming) == 'pluralize' ? 's' : '') == $entity) {
+                if ($_entity->name == $entity || $_entity->name . (strtolower($_entity->naming) == 'pluralize' ? 's' : '') == $entity) {
                     $t_entity = $_entity;
                     break;
                 }
@@ -58,7 +58,7 @@
         public function saveEntity($entity, $properties) {
             $t_entity;
             foreach ($this->entities as $_entity) {
-                if ($_entity->name == $entity || $_entity-> . (strtolower($_entity->naming) == 'pluralize' ? 's' : '') == $entity) {
+                if ($_entity->name == $entity || $_entity->name . (strtolower($_entity->naming) == 'pluralize' ? 's' : '') == $entity) {
                     $t_entity = $_entity;
                     break;
                 }
@@ -72,7 +72,7 @@
         public function getEntities($entity) {
             $t_entity;
             foreach ($this->entities as $_entity) {
-                if ($_entity->name == $entity || $_entity-> . (strtolower($_entity->naming) == 'pluralize' ? 's' : '') == $entity) {
+                if ($_entity->name == $entity || $_entity->name . (strtolower($_entity->naming) == 'pluralize' ? 's' : '') == $entity) {
                     $t_entity = $_entity;
                     break;
                 }
@@ -80,15 +80,16 @@
             
             if ($this->PDO == null)
                 $this->PDO = new PDO(sprintf(self::DSN, $this->server, $this->database), $this->user, $this->password);
-            $ = __Schema::getEntities($this->PDO, $this->structural, $t_entity, $properties);
+            return __Schema::getEntities($this->PDO, $this->structural, $t_entity, $properties);
         }
 
         public function entityExists($name) {
             foreach ($this->entities as $entity) {
                 if (($entity->name . (strtolower($entity->naming) == 'pluralize' ? 's' : '')) == $name) {
                     return true;
+                }
+                return false;
             }
-            return false;
         }
     }
 

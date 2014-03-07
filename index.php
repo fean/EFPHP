@@ -4,6 +4,5 @@
 
     require 'Entities/EntityLayer.php';
     $e = __Entity::getEntities('Entities.xml');
-    echo $e[0]->freubels;
-    print_r($e);
+    print_r(PDO::getAvailableDrivers());
 ?>
