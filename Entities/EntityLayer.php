@@ -3,20 +3,21 @@
     if(!defined('PHP_VERSION_ID'))
         trigger_error('A newer php version is required to use this product.', E_USER_ERROR);
 
-    //Include the dependencies
+    //Import the dependencies
     require 'Includes/Entities.inc.php';
     require 'Includes/Settings.inc.php';
     require 'Includes/schemahandler.inc.php';
 
-    class Context {
-        private $PDO, $structural, $server, $database, $user, $password, $entities;
+    class __Context {
+        private $PDO, $structural, $srvtype, $server, $database, $user, $password, $entities;
 
-        const DSN = 'mysql:host=%s;dbname=%s';
+        const DSN_MYSQL = 'mysql:host=%s;dbname=%s';
+        const DSN_MSSQL = 'sqlsrv:server=%s;database=%s;';
 
-        public function __construct($lazy, $path, $structural, $server, $database, $user, $password) {
+        public function __construct($lazy, $srvtype, $path, $structural, $server, $database, $user, $password) {
             try {
                 if(!$lazy)
-                    $this->PDO = new PDO(sprintf(self::DSN, $server, $database), $user, $password);
+                    $this->PDO = new PDO(sprintf($srvtype == __ServerType::MYSQL ? DSN_MYSQL : DSN_MSSQL, $server, $database), $user, $password);
             } catch (Exception $e) {
                 if ($structural) {
                     trigger_error($e->message, E_USER_ERROR);
@@ -29,6 +30,7 @@
             $this->database = $database;
             $this->user = $user;
             $this->password = $password;
+            $this->srvtype = $srvtype;
             $this->entities = __Entity::getEntities($path);
         }
 
@@ -37,50 +39,98 @@
         }
 
         public function getEntity($entity, $properties) {
-            $t_entity;
-            foreach ($this->entities as $_entity) {
-                if ($_entity->name == $entity || $_entity->name . (strtolower($_entity->naming) == 'pluralize' ? 's' : '') == $entity) {
-                    $t_entity = $_entity;
-                    break;
+            try {
+                $t_entity;
+                foreach ($this->entities as $_entity) {
+                    if ($_entity->name == $entity || $_entity->name . (strtolower($_entity->naming) == 'pluralize' ? 's' : '') == $entity) {
+                        $t_entity = $_entity;
+                        break;
+                    }
                 }
-            }
             
-            if ($this->PDO == null)
-                $this->PDO = new PDO(sprintf(self::DSN, $this->server, $this->database), $this->user, $this->password);
-            $r_entity = __Schema::getEntity($this->PDO, $t_entity, $properties);
-            if (!$this->structural) {
-                return (object)$r_entity;
-            } else {
-                return $r_entity;
+                if ($this->PDO == null)
+                    $this->PDO = new PDO(sprintf(($this->srvtype == __ServerType::MYSQL ? self::DSN_MYSQL : self::DSN_MSSQL), $this->server, $this->database), $this->user, $this->password);
+                $r_entity = __Schema::getEntity($this->PDO, $t_entity, $properties);
+                if (!$this->structural) {
+                    return (object)$r_entity;
+                } else {
+                    return $r_entity;
+                }
+            } catch (Exception $e) {
+                throw $e;
             }
         } 
 
         public function saveEntity($entity, $properties) {
-            $t_entity;
-            foreach ($this->entities as $_entity) {
-                if ($_entity->name == $entity || $_entity->name . (strtolower($_entity->naming) == 'pluralize' ? 's' : '') == $entity) {
-                    $t_entity = $_entity;
-                    break;
+            try {
+                $t_entity;
+                foreach ($this->entities as $_entity) {
+                    if ($_entity->name == $entity || $_entity->name . (strtolower($_entity->naming) == 'pluralize' ? 's' : '') == $entity) {
+                        $t_entity = $_entity;
+                        break;
+                    }
                 }
-            }
             
-            if ($this->PDO == null)
-                $this->PDO = new PDO(sprintf(self::DSN, $this->server, $this->database), $this->user, $this->password);
-            return __Schema::saveEntity($this->PDO, $t_entity, $properties);
+                if ($this->PDO == null)
+                    $this->PDO = new PDO(sprintf(($this->srvtype == __ServerType::MYSQL ? self::DSN_MYSQL : self::DSN_MSSQL), $this->server, $this->database), $this->user, $this->password);
+                return __Schema::saveEntity($this->PDO, $t_entity, $properties);
+            } catch (Exception $e) {
+                throw $e;
+            }
         }
 
         public function getEntities($entity) {
-            $t_entity;
-            foreach ($this->entities as $_entity) {
-                if ($_entity->name == $entity || $_entity->name . (strtolower($_entity->naming) == 'pluralize' ? 's' : '') == $entity) {
-                    $t_entity = $_entity;
-                    break;
+            try {
+                $t_entity;
+                foreach ($this->entities as $_entity) {
+                    if ($_entity->name == $entity || $_entity->name . (strtolower($_entity->naming) == 'pluralize' ? 's' : '') == $entity) {
+                        $t_entity = $_entity;
+                        break;
+                    }
                 }
-            }
             
-            if ($this->PDO == null)
-                $this->PDO = new PDO(sprintf(self::DSN, $this->server, $this->database), $this->user, $this->password);
-            return __Schema::getEntities($this->PDO, $this->structural, $t_entity, $properties);
+                if ($this->PDO == null)
+                    $this->PDO = new PDO(sprintf(($this->srvtype == __ServerType::MYSQL ? self::DSN_MYSQL : self::DSN_MSSQL), $this->server, $this->database), $this->user, $this->password);
+                return __Schema::getEntities($this->PDO, $this->structural, $t_entity, $properties);
+            } catch(Exception $e) {
+                throw $e;
+            }
+        }
+
+        public function create($entity) {
+            try {
+                $t_entity;
+                foreach ($this->entities as $_entity) {
+                    if ($_entity->name == $entity || $_entity->name . (strtolower($_entity->naming) == 'pluralize' ? 's' : '') == $entity) {
+                        $t_entity = $_entity;
+                        break;
+                    }
+                }
+            
+                if ($this->PDO == null)
+                    $this->PDO = new PDO(sprintf(($this->srvtype == __ServerType::MYSQL ? self::DSN_MYSQL : self::DSN_MSSQL), $this->database), $this->user, $this->password);
+                return __Schema::create($this->PDO, $t_entity);
+            } catch(Exception $e) {
+                throw $e;
+            }
+        }
+
+        public function createEntities() {
+            try {
+                $t_entity;
+                foreach ($this->entities as $_entity) {
+                    if ($_entity->name == $entity || $_entity->name . (strtolower($_entity->naming) == 'pluralize' ? 's' : '') == $entity) {
+                        $t_entity = $_entity;
+                        break;
+                    }
+                }
+            
+                if ($this->PDO == null)
+                    $this->PDO = new PDO(sprintf(($this->srvtype == __ServerType::MYSQL ? self::DSN_MYSQL : self::DSN_MSSQL), $this->server, $this->database), $this->user, $this->password);
+                return __Schema::createAll($this->PDO, $this->entities);
+            } catch(Exception $e) {
+                throw $e;
+            }
         }
 
         public function entityExists($name) {
@@ -93,11 +143,12 @@
         }
     }
 
-    class EntityLayer extends Context {
+    //OO front-end object
+    class EntityLayer extends __Context {
 
-        public function __construct($lazy, $path, $server, $database, $user, $password) {
+        public function __construct($lazy, $srvtype, $path, $server, $database, $user, $password) {
             try {
-                parent::__construct($lazy, $path, false, $server, $database, $user, $password);
+                parent::__construct($lazy, $srvtype, $path, false, $server, $database, $user, $password);
             } catch(Exception $e) {
                 throw $e;
             }
@@ -120,15 +171,17 @@
         }
     }
 
-    function create_context($lazy, $path, $server, $database, $user, $password) {
+
+    //Structural Methods
+    function create_context($lazy, $srvtype, $path, $server, $database, $user, $password) {
         try {
-            return new Context($lazy, $path, $server, $database, $user, $password);
+            return new __Context($lazy, $path, $server, $database, $user, $password);
         } catch(Exception $e) {
             trigger_error($e->message, E_USER_ERROR);
         }
     }
     
-    function get_entity($context, $entity, $properties) {
+    function get_entity($context, $entity, $properties = array()) {
         try{
             return $context->getEntity($entity, $properties);
         } catch(Exception $e) {
@@ -136,7 +189,23 @@
         }
     }
 
-    function save_entity($context, $entity, $properties) {
+    function check_create_entity($context, $entity) {
+        try{
+            return $context->create($entity);
+        } catch(Exception $e) {
+            trigger_error($e->message, E_USER_ERROR);
+        }
+    }
+
+    function check_create_entities($context) {
+        try{
+            return $context->createEntities($entity);
+        } catch(Exception $e) {
+            trigger_error($e->message, E_USER_ERROR);
+        }
+    }
+
+    function save_entity($context, $entity, $properties = array()) {
         try{
             return $context->saveEntity($entity, $properties);
         } catch(Exception $e) {
