@@ -8,6 +8,10 @@
     abstract class SHARED_QRY {
         //Query parts
         const PRT_PREPVAL = '%s = :%s AND ';
+
+        //Check constant
+        const CHK_TABLE = 'SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :table';
+        const CHK_COLUMN = 'SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = :table';
     }
     
     abstract class MYSQL_QRY {
@@ -16,9 +20,6 @@
         const QRY_FINDENTITY = 'SELECT %s FROM `%s` WHERE %s';
         const QRY_CREATEENTITY = 'INSERT INTO `%s`(%s) VALUES (%s);';
         const QRY_UPDATEENTITY = 'UPDATE `%s` SET %s WHERE %s;';
-    
-        //Check constant
-        const CHK_TABLE = 'SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :table';
     
         //Create Constants
         const CRT_TABLE = 'CREATE TABLE `%s` ( %s );';
@@ -36,9 +37,6 @@
         const QRY_FINDENTITY = 'SELECT %s FROM [%s] WHERE %s';
         const QRY_CREATEENTITY = 'INSERT INTO [%s](%s) VALUES (%s);';
         const QRY_UPDATEENTITY = 'UPDATE [%s] SET %s WHERE %s;';
-    
-        //Check constant
-        const CHK_TABLE = 'SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_CATALOG = :schema AND TABLE_NAME = :table';
     
         //Create Constants
         const CRT_TABLE = 'CREATE TABLE [%s] ( %s );';
@@ -129,11 +127,60 @@
         }
     
         public static function getEntities($db, $entity) {
+            $r_entities = array();
+            $stmt = $db->prepare(sprintf(($db->getAttribute(PDO::ATTR_DRIVER_NAME) == __ServerType::MSSQL ? MSSQL_QRY::QRY_GETENTITY : MYSQL_QRY::QRY_GETENTITY),
+                '*', 
+                $entity->name . (strtolower($entity->naming) == 'pluralize' ? 's' : '')));
+
+            try {
+                if ($stmt->execute()) {
+                    return $stmt->fetch(PDO::FETCH_ASSOC);
+                } else {
+                    throw new Exception('Couldnt get the entities: ' . $stmt->errorInfo()[2]);
+                }
+            } catch (Exception $e) {
+                throw $e;
+            }
+            return $r_entities;
+        }
+
+        public static function saveEntity($db, $entity, $values) {
             
         }
 
-        public static function checkEntity($db, $entity) {
-            
+        public static function matchEntity($db, $schema, $entity) {
+            $stmt = $db->prepare(SHARED_QRY::CHK_TABLE);
+            if($stmt->execute(array(':schema' => $schema, ':table' => $entity->name . (strtolower($entity->naming) == 'pluralize' ? 's' : '')))) {
+                if (count($stmt->fetch(PDO::FETCH_ASSOC) > 0) {
+                    $stmt = $db->prepare(SHARED_QRY::CHK_COLUMN);
+                    if($stmt->execute(array(':table' => $entity->name . (strtolower($entity->naming) == 'pluralize' ? 's' : '')))) {
+                        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                        if(count($result) == count($entity->properties) + 1) {
+                            foreach($result as $column) {
+                                $t_val = false;
+                                foreach ($entity->properties as $property) {
+                                    if ($property->name == $column['COLUMN_NAME'] && self::tanslateType($property->type) == $column['DATA_TYPE']) {
+                                        $t_val = true;
+                                        break;
+                                    }
+                                }
+                                if(!$t_val) {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        throw new Exception('Couldnt perform checking: ' . $stmt->errorInfo()[2]);
+                    }
+                } else {
+                    return false;
+                }
+            } else {
+                throw new Exception('Couldnt perform checking: ' . $stmt->errorInfo()[2]);
+            }
         }
 
         private static function translateType($type) {

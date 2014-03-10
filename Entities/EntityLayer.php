@@ -137,6 +137,10 @@
             }
         }
 
+        public function inSchema($entity) {
+            
+        }
+
         public function entityExists($name) {
             foreach ($this->entities as $entity) {
                 if (($entity->name . (strtolower($entity->naming) == 'pluralize' ? 's' : '')) == $name) {
