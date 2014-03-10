@@ -52,7 +52,11 @@
                     $this->PDO = new PDO(sprintf(($this->srvtype == __ServerType::MYSQL ? self::DSN_MYSQL : self::DSN_MSSQL), $this->server, $this->database), $this->user, $this->password);
                 $r_entity = __Schema::getEntity($this->PDO, $t_entity, $properties);
                 if (!$this->structural) {
-                    return (object)$r_entity;
+                    $t_return = array();
+                    foreach ($r_entity as $entity) {
+                        array_push($t_return, (object)$entity);
+                    }
+                    return $t_return;
                 } else {
                     return $r_entity;
                 }

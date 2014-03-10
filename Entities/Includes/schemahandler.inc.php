@@ -4,14 +4,18 @@
         const MYSQL = 'mysql';
         const MSSQL = 'sqlsrv';
     }
+
+    abstract class SHARED_QRY {
+        //Query parts
+        const PRT_PREPVAL = '%s = :%s AND ';
+    }
     
     abstract class MYSQL_QRY {
         //Query constants
-        const QRY_GETENTITY = 'SELECT %s FROM %s';
-        const QRY_FINDENTITY = 'SELECT %s FROM %s WHERE %s';
-        const QRY_CREATEENTITY = 'INSERT INTO %s(%s) VALUES (%s);';
-        const QRY_UPDATEENTITY = 'UPDATE %s SET %s WHERE %s;';
-        const QRY_LIMIT = ' LIMIT 1';
+        const QRY_GETENTITY = 'SELECT %s FROM `%s`';
+        const QRY_FINDENTITY = 'SELECT %s FROM `%s` WHERE %s';
+        const QRY_CREATEENTITY = 'INSERT INTO `%s`(%s) VALUES (%s);';
+        const QRY_UPDATEENTITY = 'UPDATE `%s` SET %s WHERE %s;';
     
         //Check constant
         const CHK_TABLE = 'SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :table';
@@ -28,11 +32,10 @@
     
     abstract class MSSQL_QRY {
         //Query constants
-        const QRY_GETENTITY = 'SELECT %s FROM %s';
-        const QRY_FINDENTITY = 'SELECT %s FROM %s WHERE %s';
-        const QRY_CREATEENTITY = 'INSERT INTO %s(%s) VALUES (%s);';
-        const QRY_UPDATEENTITY = 'UPDATE %s SET %s WHERE %s;';
-        const QRY_LIMIT = ' LIMIT 1';
+        const QRY_GETENTITY = 'SELECT %s FROM [%s]';
+        const QRY_FINDENTITY = 'SELECT %s FROM [%s] WHERE %s';
+        const QRY_CREATEENTITY = 'INSERT INTO [%s](%s) VALUES (%s);';
+        const QRY_UPDATEENTITY = 'UPDATE [%s] SET %s WHERE %s;';
     
         //Check constant
         const CHK_TABLE = 'SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_CATALOG = :schema AND TABLE_NAME = :table';
@@ -73,10 +76,11 @@
                 foreach ($entity->properties as $property) {
                     $t_qry .= ',' . $property->name . ' ' . self::translateType($property->type);
                 }
-                $stmt = $db->prepare(sprintf(($db->getAttribute(PDO::ATTR_DRIVER_NAME) == __ServerType::MSSQL ? MSSQL_QRY::CRT_TABLE : MYSQL_QRY::CRT_TABLE), 
+                $stmt = $db->prepare(sprintf(($db->getAttribute(PDO::ATTR_DRIVER_NAME) == __ServerType::MSSQL ? MSSQL_QRY::CRT_TABLE : MYSQL_QRY::CRT_TABLE),
                     $entity->name . (strtolower($entity->naming) == 'pluralize' ? 's' : ''), 
                     $t_qry));
 
+                print_r($stmt);
                 if (!$stmt->execute())
                     array_push($r_errors, $entity->name);
             }
@@ -91,42 +95,44 @@
             }
         }
     
-        public static function getEntity($db, $entity, $properties) {
+        public static function getEntity($db, $entity, $properties = array()) {
             $t_qry = '';
             $stmt;
             if (count($properties) == 0) {
-                $stmt = $db->prepare(sprintf(($db->getAttribute(PDO::ATTR_DRIVER_NAME) == __ServerType::MSSQL ? MSSQL_QRY::QRY_GETENTITY : MYSQL_QRY::QRY_GETENTITY) . MYSQL_QRY::QRY_LIMIT,
+                $stmt = $db->prepare(sprintf(($db->getAttribute(PDO::ATTR_DRIVER_NAME) == __ServerType::MSSQL ? MSSQL_QRY::QRY_GETENTITY : MYSQL_QRY::QRY_GETENTITY),
                     '*',
-                    $entity->name));
-                print_r($stmt);
+                    $entity->name . (strtolower($entity->naming) == 'pluralize' ? 's' : '')));
             } else {
                 $p_qry = '';
                 foreach ($properties as $p_name => $p_value) {
-                    $p_qry .= $p_name . ' = ' . ':' . $p_name . 'AND';
+                    $p_qry .= sprintf(SHARED_QRY::PRT_PREPVAL, $p_name, $p_name);
                 }
-                $p_qry = trim($p_qry, 'AND');
-                $stmt = $db->prepare(sprintf(($db->getAttribute(PDO::ATTR_DRIVER_NAME) == __ServerType::MSSQL ? MSSQL_QRY::QRY_FINDENTITY : MYSQL_QRY::QRY_FINDENTITY) . MYSQL_QRY::QRY_LIMIT,
+                $p_qry = substr($p_qry, 0, strlen($p_qry) - 5);
+                $stmt = $db->prepare(sprintf(($db->getAttribute(PDO::ATTR_DRIVER_NAME) == __ServerType::MSSQL ? MSSQL_QRY::QRY_FINDENTITY : MYSQL_QRY::QRY_FINDENTITY),
                     '*',
-                    $entity->name,
+                    $entity->name . (strtolower($entity->naming) == 'pluralize' ? 's' : ''),
                     $p_qry));
                 foreach ($properties as $p_name => $p_value) {
                     $stmt->bindValue(':' . $p_name, $p_value);
                 }
-                print_r($stmt);
             }
             
-            //try {
-                //if ($stmt->execute()) {
-                    
-                //} else {
-                    //throw new Exception('Couldnt get the entity: ' . $stmt->errorInfo()[2]);
-                //}
-            //} catch (Exception $e) {
-                //throw $e;   
-            //}
+            try {
+                if ($stmt->execute()) { 
+                    return $stmt->fetch(PDO::FETCH_ASSOC);
+                } else {
+                    throw new Exception('Couldnt get the entity: ' . $stmt->errorInfo()[2]);
+                }
+            } catch (Exception $e) {
+                throw $e;   
+            }
         }
     
-        public static function getEntities($db, $entity, $properties) {
+        public static function getEntities($db, $entity) {
+            
+        }
+
+        public static function checkEntity($db, $entity) {
             
         }
 
@@ -139,9 +145,13 @@
                 case 'string':
                     return 'nvarchar(4000)';
                 case 'date':
+                    return 'date';
+                case 'datetime':
                     return 'datetime';
                 case 'boolean':
                     return 'bit';
+                case 'data':
+                    return 'blob';
                 default:
                     return 'nvarchar(4000)';
             }
