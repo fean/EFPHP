@@ -117,7 +117,7 @@
             
             try {
                 if ($stmt->execute()) { 
-                    return $stmt->fetch(PDO::FETCH_ASSOC);
+                    return $stmt->fetchAll(PDO::FETCH_ASSOC);
                 } else {
                     throw new Exception('Couldnt get the entity: ' . $stmt->errorInfo()[2]);
                 }
@@ -134,7 +134,7 @@
 
             try {
                 if ($stmt->execute()) {
-                    return $stmt->fetch(PDO::FETCH_ASSOC);
+                    return $stmt->fetchAll(PDO::FETCH_ASSOC);
                 } else {
                     throw new Exception('Couldnt get the entities: ' . $stmt->errorInfo()[2]);
                 }
@@ -150,16 +150,20 @@
 
         public static function matchEntity($db, $schema, $entity) {
             $stmt = $db->prepare(SHARED_QRY::CHK_TABLE);
+            print_r($stmt);
             if($stmt->execute(array(':schema' => $schema, ':table' => $entity->name . (strtolower($entity->naming) == 'pluralize' ? 's' : '')))) {
-                if (count($stmt->fetch(PDO::FETCH_ASSOC) > 0) {
+                print_r($stmt->fetch(PDO::FETCH_ASSOC));
+                if (count($stmt->fetch(PDO::FETCH_ASSOC) > 0)) {
                     $stmt = $db->prepare(SHARED_QRY::CHK_COLUMN);
+                    print_r($stmt);
                     if($stmt->execute(array(':table' => $entity->name . (strtolower($entity->naming) == 'pluralize' ? 's' : '')))) {
                         $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                        print_r($result);
                         if(count($result) == count($entity->properties) + 1) {
                             foreach($result as $column) {
                                 $t_val = false;
                                 foreach ($entity->properties as $property) {
-                                    if ($property->name == $column['COLUMN_NAME'] && self::tanslateType($property->type) == $column['DATA_TYPE']) {
+                                    if ($property->name == $column['COLUMN_NAME'] && self::tanslateType($property->type, true) == $column['DATA_TYPE']) {
                                         $t_val = true;
                                         break;
                                     }
@@ -183,14 +187,14 @@
             }
         }
 
-        private static function translateType($type) {
+        private static function translateType($type, $plain = false, $length = 0) {
             switch (strtolower($type)) {
                 case 'int': 
                     return 'int';
                 case 'integer':
                     return 'int';
                 case 'string':
-                    return 'nvarchar(4000)';
+                    return 'nvarchar' . ($plain ? '' : ('(' . ($length > 0 ? $length : 4000) . ')'));
                 case 'date':
                     return 'date';
                 case 'datetime':
@@ -200,7 +204,7 @@
                 case 'data':
                     return 'blob';
                 default:
-                    return 'nvarchar(4000)';
+                    return 'nvarchar' . ($plain ? '' : ('(' . ($length > 0 ? $length : 4000) . ')'));
             }
         }
     }

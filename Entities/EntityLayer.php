@@ -5,7 +5,7 @@
 
     //Import the dependencies
     require 'Includes/Entities.inc.php';
-    require 'Includes/Settings.inc.php';
+    require 'Includes/ResultLayer.inc.php';
     require 'Includes/schemahandler.inc.php';
 
     class __Context {
@@ -52,11 +52,19 @@
                     $this->PDO = new PDO(sprintf(($this->srvtype == __ServerType::MYSQL ? self::DSN_MYSQL : self::DSN_MSSQL), $this->server, $this->database), $this->user, $this->password);
                 $r_entity = __Schema::getEntity($this->PDO, $t_entity, $properties);
                 if (!$this->structural) {
-                    $t_return = array();
-                    foreach ($r_entity as $entity) {
-                        array_push($t_return, (object)$entity);
+                    if (count($r_entity) > 1) {
+                        $t_result = array();
+                        foreach($r_entity as $entity) {
+                            array_push($t_result, (object)$entity);
+                        }
+                        return $t_result;
+                    } else {
+                        if (count($r_entity) > 0) {
+                            return (object)$r_entity[0];
+                        } else {
+                            return $r_entity;
+                        }
                     }
-                    return $t_return;
                 } else {
                     return $r_entity;
                 }
@@ -95,7 +103,24 @@
             
                 if ($this->PDO == null)
                     $this->PDO = new PDO(sprintf(($this->srvtype == __ServerType::MYSQL ? self::DSN_MYSQL : self::DSN_MSSQL), $this->server, $this->database), $this->user, $this->password);
-                return __Schema::getEntities($this->PDO, $this->structural, $t_entity, $properties);
+                $result = __Schema::getEntities($this->PDO, $t_entity);
+                if(!$this->structural) {
+                    if (count($result) > 1) {
+                        $t_result = array();
+                        foreach($result as $entity) {
+                            array_push($t_result, (object)$entity);
+                        }
+                        return $t_result;
+                    } else {
+                        if (count($result) > 0) {
+                            return (object)$result[0];
+                        } else {
+                            return $result;
+                        }
+                    }
+                } else {
+                    return $result;
+                }
             } catch(Exception $e) {
                 throw $e;
             }
@@ -164,7 +189,7 @@
 
         public function __get($name) {
             if (parent::entityExists($name)) {
-                return parent::getEntities($name);
+                return new __ResultLayer($this, $name);
             } else {
                 trigger_error('Undefined property: EntityLayer::$' . $name . '.', E_USER_ERROR);
             }
