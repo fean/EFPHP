@@ -250,7 +250,7 @@
 
     function check_create_entities($context) {
         try{
-            return $context->createEntities($entity);
+            return $context->createEntities();
         } catch(Exception $e) {
 		trigger_error($e->getMessage(), E_USER_ERROR);
         }

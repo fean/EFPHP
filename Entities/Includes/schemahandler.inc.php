@@ -78,7 +78,6 @@
                     $entity->name . (strtolower($entity->naming) == 'pluralize' ? 's' : ''), 
                     $t_qry));
 
-                print_r($stmt);
                 if (!$stmt->execute())
                     array_push($r_errors, $entity->name);
             }
