@@ -145,7 +145,32 @@
         }
 
         public static function saveEntity($db, $entity, $values) {
-            
+            $t_names = '';
+			$t_params = '';
+			foreach($values as $_name => $_value) {
+				$t_names .= $_name . ',';
+				$t_params .= ':' . $_name . ',';
+			}
+			$t_names = trim($t_names, ',');
+			$t_params = trim($t_params, ',');
+			
+			$stmt = $db->prepare(sprintf(($db->getAttribute(PDO::ATTR_DRIVER_NAME) == __ServerType::MSSQL ? MSSQL_QRY::QRY_CREATEENTITY : MYSQL_QRY::QRY_CREATEENTITY),
+				$entity->name . (strtolower($entity->naming) == 'pluralize' ? 's' : ''),
+				$t_names,
+				$t_params));
+			foreach($values as $_name => $_value) {
+				$stmt->bindValue(':' . $_name, $_value);
+			}
+			
+			try {
+				if($stmt->execute()) {
+					return true;
+				} else {
+				throw new Exception('Couldnt save entity: ' . $stmt->errorInfo()[2]);
+				}
+			} catch(Exception $e) {
+				throw $e;
+			}
         }
 
         public static function matchEntity($db, $schema, $entity) {

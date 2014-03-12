@@ -47,6 +47,9 @@
                         break;
                     }
                 }
+				
+				if ($t_entity == null)
+					throw new Exception('The entity couldnt be found.');
             
                 if ($this->PDO == null)
                     $this->PDO = new PDO(sprintf(($this->srvtype == __ServerType::MYSQL ? self::DSN_MYSQL : self::DSN_MSSQL), $this->server, $this->database), $this->user, $this->password);
@@ -82,6 +85,9 @@
                         break;
                     }
                 }
+				
+				if ($t_entity == null)
+					throw new Exception('The entity couldnt be found.');
             
                 if ($this->PDO == null)
                     $this->PDO = new PDO(sprintf(($this->srvtype == __ServerType::MYSQL ? self::DSN_MYSQL : self::DSN_MSSQL), $this->server, $this->database), $this->user, $this->password);
@@ -100,6 +106,9 @@
                         break;
                     }
                 }
+				
+				if ($t_entity == null)
+					throw new Exception('The entity couldnt be found.');
             
                 if ($this->PDO == null)
                     $this->PDO = new PDO(sprintf(($this->srvtype == __ServerType::MYSQL ? self::DSN_MYSQL : self::DSN_MSSQL), $this->server, $this->database), $this->user, $this->password);
@@ -135,6 +144,9 @@
                         break;
                     }
                 }
+				
+				if ($t_entity == null)
+					throw new Exception('The entity couldnt be found.');
             
                 if ($this->PDO == null)
                     $this->PDO = new PDO(sprintf(($this->srvtype == __ServerType::MYSQL ? self::DSN_MYSQL : self::DSN_MSSQL), $this->database), $this->user, $this->password);
@@ -145,15 +157,7 @@
         }
 
         public function createEntities() {
-            try {
-                $t_entity;
-                foreach ($this->entities as $_entity) {
-                    if ($_entity->name == $entity || $_entity->name . (strtolower($_entity->naming) == 'pluralize' ? 's' : '') == $entity) {
-                        $t_entity = $_entity;
-                        break;
-                    }
-                }
-            
+            try {         
                 if ($this->PDO == null)
                     $this->PDO = new PDO(sprintf(($this->srvtype == __ServerType::MYSQL ? self::DSN_MYSQL : self::DSN_MSSQL), $this->server, $this->database), $this->user, $this->password);
                 return __Schema::createAll($this->PDO, $this->entities);
@@ -163,7 +167,21 @@
         }
 
         public function inSchema($entity) {
-            
+            try {
+                $t_entity;
+                foreach ($this->entities as $_entity) {
+                    if ($_entity->name == $entity || $_entity->name . (strtolower($_entity->naming) == 'pluralize' ? 's' : '') == $entity) {
+                        $t_entity = $_entity;
+                        break;
+                    }
+                }
+				
+				if ($this->PDO == null)
+					$this->PDO = new PDO(sprintf(($this->srvtype == __ServerType::MYSQL ? self::DSN_MYSQL : self::DSN_MSSQL), $this->server, $this->database), $this->user, $this->password);
+			return __Schema::matchEntity($this->PDO, $this->database, $this->entities);
+			} catch (Exception $e) {
+				throw $e;	
+			}
         }
 
         public function entityExists($name) {
@@ -181,7 +199,7 @@
 
         public function __construct($lazy, $srvtype, $path, $server, $database, $user, $password) {
             try {
-                parent::__construct($lazy, $srvtype, $path, false, $server, $database, $user, $password);
+			parent::__construct($lazy, $srvtype, $path, false, $server, $database, $user, $password);
             } catch(Exception $e) {
                 throw $e;
             }
@@ -208,9 +226,9 @@
     //Structural Methods
     function create_context($lazy, $srvtype, $path, $server, $database, $user, $password) {
         try {
-            return new __Context($lazy, $path, $server, $database, $user, $password);
+		return new __Context($lazy, $srvtype, $path, true, $server, $database, $user, $password);
         } catch(Exception $e) {
-            trigger_error($e->message, E_USER_ERROR);
+		trigger_error($e->getMessage(), E_USER_ERROR);
         }
     }
     
@@ -218,7 +236,7 @@
         try{
             return $context->getEntity($entity, $properties);
         } catch(Exception $e) {
-            trigger_error($e->message, E_USER_ERROR);
+		trigger_error($e->getMessage(), E_USER_ERROR);
         }
     }
 
@@ -234,7 +252,7 @@
         try{
             return $context->createEntities($entity);
         } catch(Exception $e) {
-            trigger_error($e->message, E_USER_ERROR);
+		trigger_error($e->getMessage(), E_USER_ERROR);
         }
     }
 
@@ -242,7 +260,7 @@
         try{
             return $context->saveEntity($entity, $properties);
         } catch(Exception $e) {
-            trigger_error($e->message, E_USER_ERROR);
+		trigger_error($e->getMessage(), E_USER_ERROR);
         }    
     }
 
@@ -250,7 +268,7 @@
         try{
             return $context->getEntities($entity);
         } catch(Exception $e) {
-            trigger_error($e->message, E_USER_ERROR);
+		trigger_error($e->getMessage(), E_USER_ERROR);
         }
     }
 ?>
