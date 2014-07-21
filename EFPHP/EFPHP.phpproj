@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Name>EFPHP</Name>
+    <ProjectGuid>cbed26d7-fdf0-469d-ada6-8db8c2538ff0</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>EFPHP</RootNamespace>
+    <ProjectTypeGuids>{A0786B88-2ADB-4C21-ABE8-AA2D79766269}</ProjectTypeGuids>
+    <AssemblyName>EFPHP</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <IncludeDebugInformation>true</IncludeDebugInformation>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <IncludeDebugInformation>false</IncludeDebugInformation>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Entities\" />
+    <Folder Include="Entities\Includes\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Entities\EntityLayer.php" />
+    <Compile Include="Entities\Includes\Entities.inc.php" />
+    <Compile Include="Entities\Includes\ResultLayer.inc.php" />
+    <Compile Include="Entities\Includes\schemahandler.inc.php" />
+    <Compile Include="index.php" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Entities.xml" />
+  </ItemGroup>
+</Project>
